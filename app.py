@@ -11,4 +11,4 @@ app.add_middleware(CORSMiddleware,
 
 @app.get("/")
 async def index()->dict[str, str]:
-    return {"message":"Hello World"}
+    return {"message":"This is a Response from FastAPI from Vercel"}
