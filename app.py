@@ -1,8 +1,7 @@
-import select
 from typing import Annotated, Any, Generator, LiteralString
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import User, Todo, Studies, SQLModel, Session, create_engine
+from database import *
 
 sqlite_file_name: str = "database.db"
 sqlite_uri: LiteralString = f"sqlite:///{sqlite_file_name}"
@@ -36,7 +35,7 @@ async def index() -> dict[str, str]:
 
 @app.get("/api/author")
 async def author() -> dict[str, str]:
-    return {"message": "Pomodoro Planner API by Dasun Nethsara @DasunNethsara-04"}
+    return {"author": "Dasun Nethsara", "message": "Pomodoro Planner API by Dasun Nethsara @DasunNethsara-04", "author_website": "http://techsaralk.epizy.com/", "author_github": "https://github.com/DasunNethsara-04/"}
 
 # users related endpoints
 @app.get("/api/users")

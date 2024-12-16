@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlmodel import Field, SQLModel, Session, create_engine
+from sqlmodel import Field, SQLModel, Session, create_engine, select
 
 class User(SQLModel, table=True):
     id: int = Field(primary_key=True, default=None)
