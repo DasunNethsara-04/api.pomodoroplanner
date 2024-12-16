@@ -9,6 +9,10 @@ app.add_middleware(CORSMiddleware,
                    allow_headers=["*"],
                    )
 
-@app.get("/")
-async def index()->dict[str, str]:
-    return {"message":"This is a Response from FastAPI from Vercel"}
+@app.get("/api/")
+async def index() -> dict[str, str]:
+    return {"message": "This is a Response from FastAPI from Vercel"}
+
+@app.get("/api/author")
+async def author() -> dict[str, str]:
+    return {"message": "Pomodoro Planner API by Dasun Nethsara @DasunNethsara-04"}
