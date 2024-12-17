@@ -33,14 +33,16 @@ async def on_startup() -> None:
 async def index() -> dict[str, str]:
     return {"message": "This is a Response from FastAPI from Vercel"}
 
-@app.get("/api/author")
-async def author() -> dict[str, str]:
-    return  {
-            "author": "Dasun Nethsara",
-            "message": "Pomodoro Planner API by Dasun Nethsara @DasunNethsara-04",
-            "author_website": "http://techsaralk.epizy.com/",
-            "author_github": "https://github.com/DasunNethsara-04/"
-            }
+@app.get("/api/info")
+async def info() -> dict[str, str]:
+    return {
+        "app_name": "Pomodoro Planner",
+        "app_version": "1.0.0",
+        "app_description": "Pomodoro Planner API for Pomodoro Planner App",
+        "app_author": "Dasun Nethsara",
+        "app_author_website": "http://techsaralk.epizy.com/",
+        "app_author_github": "https://github.com/DasunNethsara-04/"
+    }
 
 # users related endpoints
 @app.get("/api/users")
