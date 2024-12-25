@@ -1,6 +1,7 @@
 # imports
 from typing import Annotated, Any, Generator, LiteralString
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from database import *
 
