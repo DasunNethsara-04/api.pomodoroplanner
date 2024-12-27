@@ -1,28 +1,16 @@
 # imports
-from typing import Annotated, Any, Generator, LiteralString
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import Annotated, Any
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import *
-
-# database connection
-sqlite_file_name: str = "database.db"
-sqlite_uri: LiteralString = f"sqlite:///{sqlite_file_name}"
-connect_args: dict[str, bool] = {"check_same_thread": False}
-engine = create_engine(sqlite_uri, connect_args=connect_args, echo=True)
-
-# create database and tables
-def create_db_and_tables() -> None:
-    SQLModel.metadata.create_all(engine)
-
-def get_session() -> Generator[Session, Any, None]:
-    with Session(engine) as session:
-        yield session
+import auth
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
 # FastAPI app
 app: FastAPI = FastAPI()
+app.include_router(auth.router)
+
 app.add_middleware(CORSMiddleware,
                    allow_origins=['*'],
                    allow_credentials=True,
@@ -51,20 +39,20 @@ async def info() -> dict[str, str]:
 
 # users related endpoints
 @app.get("/api/users")
-async def get_users(session: SessionDep) -> list[dict]:
+async def get_users(session: SessionDep) -> list[User]:
     users: Any = session.exec(select(User)).all()
     return users
 
 
 # todos related endpoints
 @app.get("/api/todos")
-async def get_todos(session: SessionDep) -> list[dict]:
+async def get_todos(session: SessionDep) -> list[User]:
     todos: Any = session.exec(select(Todo)).all()
     return todos
 
 
 # studies related endpoints
 @app.get("/api/studies")
-async def get_studies(session: SessionDep) -> list[dict]:
+async def get_studies(session: SessionDep) -> list[User]:
     studies: Any = session.exec(select(Studies)).all()
     return studies
