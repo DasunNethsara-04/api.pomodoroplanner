@@ -6,8 +6,9 @@ from sqlmodel import Field, SQLModel, Session, create_engine, select
 class User(SQLModel, table=True):
     '''User model for the database. This model contains the user's information.'''
     id: int = Field(primary_key=True, default=None)
+    firstName: str = Field(max_length=100)
+    lastName: str = Field(max_length=100)
     username: str = Field(max_length=100)
-    email: str = Field(max_length=100)
     password: str = Field(max_length=100)
 
 class Todo(SQLModel, table=True):
