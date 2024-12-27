@@ -1,27 +1,16 @@
-# imports
-from datetime import datetime
-from sqlmodel import Field, SQLModel, Session, create_engine, select
+from typing import Annotated, Any, Generator, LiteralString
+from models import *
 
-# database models
-class User(SQLModel, table=True):
-    '''User model for the database. This model contains the user's information.'''
-    id: int = Field(primary_key=True, default=None)
-    username: str = Field(max_length=100)
-    email: str = Field(max_length=100)
-    password: str = Field(max_length=100)
+# database connection
+sqlite_file_name: str = "database.db"
+sqlite_uri: LiteralString = f"sqlite:///{sqlite_file_name}"
+connect_args: dict[str, bool] = {"check_same_thread": False}
+engine = create_engine(sqlite_uri, connect_args=connect_args, echo=True)
 
-class Todo(SQLModel, table=True):
-    '''Todo model for the database. This model contains the todo information.'''
-    id: int|None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
-    title: str = Field(max_length=100)
-    description: str = Field(max_length=100)
-    completed: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=lambda: datetime.now())
+# create database and tables
+def create_db_and_tables() -> None:
+    SQLModel.metadata.create_all(engine)
 
-class Studies(SQLModel, table=True):
-    '''Studies model for the database. This model contains the studies information.'''
-    id: int|None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
-    date: datetime = Field(default_factory=lambda: datetime.now())
-    hours: int = Field(default=0)
+def get_session() -> Generator[Session, Any, None]:
+    with Session(engine) as session:
+        yield session
