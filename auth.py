@@ -4,7 +4,7 @@ from typing import Annotated, Any, Generator
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from starlette import status
-from database import Session, User, create_engine
+from database import Session, User
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
