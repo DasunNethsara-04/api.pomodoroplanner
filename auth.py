@@ -18,8 +18,9 @@ oauth2_bearer: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl="auth/token"
 
 # base models
 class CreateUserRequest(BaseModel):
+    firstName: str
+    lastName: str
     username: str
-    email: str
     password: str
 
 class Token(BaseModel):
@@ -63,15 +64,19 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]) -> dic
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_user(db: SessionDep, create_user_request: CreateUserRequest) -> None:
+async def create_user(db: SessionDep, create_user_request: CreateUserRequest) -> dict[str, str]:
     create_user_model: User = User(
+        firstName=create_user_request.firstName,
+        lastName=create_user_request.lastName,
         username= create_user_request.username,
-        email=create_user_request.email,
         password=bcrypt_context.hash(create_user_request.password),
     )
     
     db.add(create_user_model)
     db.commit()
+    # create a token for the user
+    token = create_access_token(create_user_request.username, create_user_model.id, timedelta(minutes=15))
+    return {"message": "User created successfully!", "access_token": token, "token_type": "bearer"}
     
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: SessionDep) -> dict[str, str]:
@@ -80,4 +85,3 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
     token = create_access_token(user.username, user.id, timedelta(minutes=15))
     return {"access_token": token, "token_type": "bearer"}
-    
