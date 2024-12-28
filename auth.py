@@ -52,6 +52,31 @@ def create_access_token(username: str, id: int|str, expires_delta: timedelta) ->
     encode.update({"exp": expires})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
+def create_user(session: SessionDep, create_user_request: CreateUserRequest) -> dict:
+    create_user_model: User = User(
+        firstName=create_user_request.firstName,
+        lastName=create_user_request.lastName,
+        username= create_user_request.username,
+        password=bcrypt_context.hash(create_user_request.password),
+    )
+    session.add(create_user_model)
+    session.commit()
+    session.refresh(User)
+    return create_user_model
+    
+def get_user_by_username(session: SessionDep, username: str) -> dict:
+    return session.exec(select(User).filter(User.username == username)).first()
+
+def verify_token(token: str = Depends(oauth2_bearer)) -> dict[str, str] | HTTPException:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token is invalid or expired")
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token is invalid or expired")
+
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]) -> dict[str, str] | HTTPException:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -64,19 +89,11 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]) -> dic
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_user(db: SessionDep, create_user_request: CreateUserRequest) -> dict[str, str]:
-    create_user_model: User = User(
-        firstName=create_user_request.firstName,
-        lastName=create_user_request.lastName,
-        username= create_user_request.username,
-        password=bcrypt_context.hash(create_user_request.password),
-    )
-    
-    db.add(create_user_model)
-    db.commit()
-    # create a token for the user
-    token = create_access_token(create_user_request.username, create_user_model.id, timedelta(minutes=15))
-    return {"message": "User created successfully!", "access_token": token, "token_type": "bearer"}
+async def register_user(db: SessionDep, create_user_request: CreateUserRequest) -> dict:
+    db_user = get_user_by_username(db, create_user_request.username)
+    if db_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
+    return create_user(db, create_user_request)
     
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: SessionDep) -> dict[str, str]:
@@ -85,3 +102,8 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
     token = create_access_token(user.username, user.id, timedelta(minutes=15))
     return {"access_token": token, "token_type": "bearer"}
+
+@router.get("/verify-token/{token}")
+def verify_user_token(token: str) -> dict:
+    verify_token(token)
+    return {"message": "Token is valid"}
