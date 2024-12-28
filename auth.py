@@ -52,7 +52,7 @@ def create_access_token(username: str, id: int|str, expires_delta: timedelta) ->
     encode.update({"exp": expires})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def create_user(session: SessionDep, create_user_request: CreateUserRequest) -> dict:
+def create_user(session: SessionDep, create_user_request: CreateUserRequest) -> User:
     create_user_model: User = User(
         firstName=create_user_request.firstName,
         lastName=create_user_request.lastName,
@@ -61,7 +61,6 @@ def create_user(session: SessionDep, create_user_request: CreateUserRequest) -> 
     )
     session.add(create_user_model)
     session.commit()
-    session.refresh(User)
     return create_user_model
     
 def get_user_by_username(session: SessionDep, username: str) -> dict:
@@ -89,11 +88,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]) -> dic
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def register_user(db: SessionDep, create_user_request: CreateUserRequest) -> dict:
+async def register_user(db: SessionDep, create_user_request: CreateUserRequest) -> dict[str, str]:
     db_user = get_user_by_username(db, create_user_request.username)
     if db_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
-    return create_user(db, create_user_request)
+    user = create_user(db, create_user_request)
+    token = create_access_token(create_user_request.username, user.id, timedelta(minutes=15))
+    return {"access_token": token, "token_type": "bearer"}
     
 @router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: SessionDep) -> dict[str, str]:
@@ -104,6 +105,6 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     return {"access_token": token, "token_type": "bearer"}
 
 @router.get("/verify-token/{token}")
-def verify_user_token(token: str) -> dict:
+def verify_user_token(token: str) -> dict[str, str]:
     verify_token(token)
     return {"message": "Token is valid"}
