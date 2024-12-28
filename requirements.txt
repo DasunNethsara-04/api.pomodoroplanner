@@ -21,12 +21,15 @@ Jinja2==3.1.4
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
+mysqlclient==2.2.6
 passlib==1.7.4
+pathlib==1.0.1
 pyasn1==0.6.1
 pycparser==2.22
 pydantic==2.10.3
 pydantic_core==2.27.1
 Pygments==2.18.0
+PyMySQL==1.1.1
 python-dotenv==1.0.1
 python-jose==3.3.0
 python-multipart==0.0.19
