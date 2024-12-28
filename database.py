@@ -1,16 +1,10 @@
-from typing import Annotated, Any, Generator, LiteralString
-from models import *
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# database connection
-sqlite_file_name: str = "database.db"
-sqlite_uri: LiteralString = f"sqlite:///{sqlite_file_name}"
-connect_args: dict[str, bool] = {"check_same_thread": False}
-engine = create_engine(sqlite_uri, connect_args=connect_args, echo=True)
+DATABASE_URL = "mysql+pymysql://freedb_pomodororoot:ty%JaSP4cxgz!xK@sql.freedb.tech:3306/freedb_pomodoroplannerdb"
 
-# create database and tables
-def create_db_and_tables() -> None:
-    SQLModel.metadata.create_all(engine)
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def get_session() -> Generator[Session, Any, None]:
-    with Session(engine) as session:
-        yield session
+Base = declarative_base()
