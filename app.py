@@ -2,12 +2,14 @@
 from typing import Annotated, Any
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import select
 from starlette import status
-from database import *
+from database import engine, SessionLocal
+from sqlalchemy.orm import Session
+import models
 import auth
 from auth import get_current_user
-
-SessionDep = Annotated[Session, Depends(get_session)]
+from models import User, Todo, Studies
 
 # FastAPI app
 app: FastAPI = FastAPI()
@@ -22,8 +24,17 @@ app.add_middleware(CORSMiddleware,
 
 @app.on_event("startup")
 async def on_startup() -> None:
-    create_db_and_tables()
-
+    models.Base.metadata.create_all(bind=engine)
+    
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+SessionDep = Annotated[Session, Depends(get_db)]
+    
 @app.get("/api/")
 async def index() -> dict[str, str]:
     return {"message": "This is a Response from FastAPI from Vercel"}
@@ -41,26 +52,26 @@ async def info() -> dict[str, str]:
 
 # users related endpoints
 @app.get("/api/user", status_code=status.HTTP_200_OK)
-async def get_user(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict:
+async def get_user(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict[str, dict[str, str]]:
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
     return {"User": user}
 
 @app.get("/api/users")
-async def get_users(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> list[User]:
+async def get_users(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict:
     users: Any = session.exec(select(User)).all()
     return users
 
 
 # todos related endpoints
 @app.get("/api/todos")
-async def get_todos(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> list[User]:
+async def get_todos(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict:
     todos: Any = session.exec(select(Todo)).all()
     return todos
 
 
 # studies related endpoints
 @app.get("/api/studies")
-async def get_studies(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> list[User]:
+async def get_studies(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict:
     studies: Any = session.exec(select(Studies)).all()
     return studies
