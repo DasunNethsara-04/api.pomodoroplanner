@@ -57,7 +57,7 @@ def authenticate_user(username: str, password: str, db: SessionDep) -> dict[User
     return user
 
 
-def create_access_token(username: str, id: int|str, expires_delta: timedelta) -> dict[str, Any]:
+def create_access_token(username: str, id: int|str, expires_delta: timedelta) -> dict[str]:
     encode: dict = {"sub": username, "id": id}
     expires = datetime.utcnow() + expires_delta
     encode.update({"exp": expires})
