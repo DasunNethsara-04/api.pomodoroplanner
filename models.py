@@ -28,8 +28,8 @@
 #     hours: int = Field(default=0)
 
 
-from datetime import datetime
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime
+import datetime
+from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, DateTime
 from database import Base
 
 class User(Base):
@@ -49,9 +49,10 @@ class Todo(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.id"))
     title = Column(String(50), index=True)
-    description = Column(String(100), index=True)
+    description = Column(String(100), index=True, nullable=True)
     completed = Column(Boolean, default=False)
-    created_at = Column(DateTime, index=True)
+    dueDate = Column(Date, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
 class Studies(Base):
     '''Studies model for the database. This model contains the studies information.'''
@@ -59,5 +60,5 @@ class Studies(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("user.id"))
-    date = Column(DateTime, index=True, default=datetime.now())
+    date = Column(DateTime, index=True, default=datetime.datetime.utcnow)
     hours = Column(Integer, index=True, default=0)
