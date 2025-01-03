@@ -1,7 +1,9 @@
 # imports
+import datetime
 from typing import Annotated, Any
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Body, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sqlalchemy import select
 from starlette import status
 from database import engine, SessionLocal
@@ -10,6 +12,15 @@ import models
 import auth
 from auth import get_current_user
 from models import User, Todo, Studies
+
+# base models
+class CreateTodoRequest(BaseModel):
+    id: int | None = None
+    title: str
+    description: str | None = None
+    completed: bool|None = False
+    dueDate: str
+    created_at: str = datetime.datetime.now().strftime("%Y-%m-%d")
 
 # FastAPI app
 app: FastAPI = FastAPI()
@@ -69,6 +80,19 @@ async def get_todos(user: Annotated[dict, Depends(get_current_user)], session: S
     todos: Any = session.exec(select(Todo)).all()
     return todos
 
+@app.post("/api/todo/")
+async def create_todo(todo: CreateTodoRequest, session: SessionDep, user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
+    new_todo: Todo = Todo(
+        title=todo.title,
+        description=todo.description,
+        completed=todo.completed,
+        dueDate = todo.dueDate,
+        created_at = todo.created_at,
+        user_id=user["id"]
+    )
+    session.add(new_todo)
+    session.commit()
+    return {"success": True, "message": "New Todo Created Successfully!"}
 
 # studies related endpoints
 @app.get("/api/studies")
