@@ -58,7 +58,7 @@ This is the backend for the Pomodoro Planner app, designed to help students effe
 - **API Info**: `GET /api/info`
 - **User Registration**: `POST /auth/`
 - **User Login**: `POST /api/token/`
-- **Create Task**: `POST /api/tasks/` (_Not implemented yet_)
+- **Create Task**: `POST /api/tasks/`
 - **Get Tasks**: `GET /api/tasks/` (_Not implemented yet_)
 - **Update Task**: `PUT /api/tasks/{task_id}/` (_Not implemented yet_)
 - **Delete Task**: `DELETE /api/tasks/{task_id}/` (_Not implemented yet_)
