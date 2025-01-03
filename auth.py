@@ -109,7 +109,7 @@ async def register_user(db: SessionDep, create_user_request: CreateUserRequest) 
     if db_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
     user = create_user(db, create_user_request)
-    token = create_access_token(create_user_request.username, user.id, timedelta(minutes=15))
+    token = create_access_token(create_user_request.username, user.id, timedelta(minutes=60))
     return {"access_token": token, "token_type": "bearer"}
     
 
@@ -118,7 +118,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
-    token = create_access_token(user.username, user.id, timedelta(minutes=15))
+    token = create_access_token(user.username, user.id, timedelta(minutes=60))
     return {"access_token": token, "token_type": "bearer"}
 
 
