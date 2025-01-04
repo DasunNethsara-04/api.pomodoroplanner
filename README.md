@@ -54,12 +54,13 @@ This is the backend for the Pomodoro Planner app, designed to help students effe
    Open your browser and navigate to `http://127.0.0.1:8000/docs` to view the interactive API documentation.
 
 ## API Endpoints
+
 - **Testing Message**: `GET /api/`
 - **API Info**: `GET /api/info`
 - **User Registration**: `POST /auth/`
 - **User Login**: `POST /api/token/`
 - **Create Task**: `POST /api/tasks/`
-- **Get Tasks**: `GET /api/tasks/` (_Not implemented yet_)
+- **Get Tasks**: `GET /api/tasks/`
 - **Update Task**: `PUT /api/tasks/{task_id}/` (_Not implemented yet_)
 - **Delete Task**: `DELETE /api/tasks/{task_id}/` (_Not implemented yet_)
 
