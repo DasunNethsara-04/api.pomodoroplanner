@@ -2,7 +2,6 @@
 from datetime import timedelta, datetime
 from typing import Annotated, Any, Generator
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from starlette import status
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -10,24 +9,13 @@ from jose import JWTError, jwt
 from database import *
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-
+from base_models import CreateUserRequest, Token
 from models import User
 
 SECRET_KEY: str = "KEY"
 ALGORITHM: str = "HS256"
 bcrypt_context: CryptContext = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer: OAuth2PasswordBearer = OAuth2PasswordBearer(tokenUrl="auth/token")
-
-# base models
-class CreateUserRequest(BaseModel):
-    firstName: str
-    lastName: str
-    username: str
-    password: str
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
 
 router: APIRouter = APIRouter(
     prefix="/auth",
