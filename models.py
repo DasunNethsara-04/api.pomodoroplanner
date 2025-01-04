@@ -29,6 +29,7 @@
 
 
 import datetime
+from typing import Any
 from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, DateTime
 from database import Base
 
@@ -51,8 +52,20 @@ class Todo(Base):
     title = Column(String(50), index=True)
     description = Column(String(100), index=True, nullable=True)
     completed = Column(Boolean, default=False)
-    dueDate = Column(Date, default=datetime.datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    dueDate = Column(Date, default=datetime.datetime.now)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "title": self.title,
+            "description": self.description,
+            "completed": self.completed,
+            "dueDate": self.dueDate,
+            "created_at": self.created_at,
+        }
+
     
 class Studies(Base):
     '''Studies model for the database. This model contains the studies information.'''
