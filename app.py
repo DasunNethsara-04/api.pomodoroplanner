@@ -1,10 +1,9 @@
 # imports
 import datetime
 from typing import Annotated, Any
-from fastapi import Body, Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy import select
 from starlette import status
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
@@ -20,7 +19,7 @@ class CreateTodoRequest(BaseModel):
     description: str | None = None
     completed: bool|None = False
     dueDate: str
-    created_at: str = datetime.datetime.now().strftime("%Y-%m-%d")
+    created_at: str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 # FastAPI app
 app: FastAPI = FastAPI()
@@ -70,15 +69,15 @@ async def get_user(user: Annotated[dict, Depends(get_current_user)], session: Se
 
 @app.get("/api/users")
 async def get_users(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict:
-    users: Any = session.exec(select(User)).all()
+    users: Any = session.query(User).all()
     return users
-
 
 # todos related endpoints
 @app.get("/api/todos")
-async def get_todos(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict:
-    todos: Any = session.exec(select(Todo)).all()
-    return todos
+async def get_todos(session: SessionDep, user: dict = Depends(get_current_user)) -> dict[str, list[dict[str, Any]]]:
+    todos = session.query(Todo).filter(Todo.user_id == user["id"]).all()
+    return {"todos": [todo.to_dict() for todo in todos]}
+
 
 @app.post("/api/todo/")
 async def create_todo(todo: CreateTodoRequest, session: SessionDep, user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
@@ -97,5 +96,5 @@ async def create_todo(todo: CreateTodoRequest, session: SessionDep, user: Annota
 # studies related endpoints
 @app.get("/api/studies")
 async def get_studies(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict:
-    studies: Any = session.exec(select(Studies)).all()
+    studies: Any = session.query(Studies).filter(Studies.user_id == user["id"]).all()
     return studies
