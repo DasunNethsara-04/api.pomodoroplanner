@@ -11,15 +11,7 @@ import models
 import auth
 from auth import get_current_user
 from models import User, Todo, Studies
-
-# base models
-class CreateTodoRequest(BaseModel):
-    id: int | None = None
-    title: str
-    description: str | None = None
-    completed: bool|None = False
-    dueDate: str
-    created_at: str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from base_models import CreateTodoRequest
 
 # FastAPI app
 app: FastAPI = FastAPI()
