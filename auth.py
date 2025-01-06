@@ -8,7 +8,6 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from database import *
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 from base_models import CreateUserRequest, Token
 from models import User
 
