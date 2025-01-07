@@ -68,6 +68,12 @@ async def get_todos(session: SessionDep, user: dict = Depends(get_current_user))
     todos: List[Todo] = session.query(Todo).filter(Todo.user_id == user["id"]).all()
     return {"todos": [todo.to_dict() for todo in todos]}
 
+@app.get("/api/todo/{todo_id}")
+async def get_todo_by_id(todo_id: str|int, session: SessionDep, user: Annotated[dict, Depends(get_current_user)]) -> dict[str, dict[str, Any]]:
+    todo: Todo = session.query(Todo).filter(Todo.id == todo_id).first()
+    if todo is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not Found!")
+    return {"todo": todo.to_dict()}
 
 @app.post("/api/todo/")
 async def create_todo(todo: CreateTodoRequest, session: SessionDep, user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
