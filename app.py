@@ -9,7 +9,7 @@ import models
 import auth
 from auth import get_current_user
 from models import User, Todo, Studies
-from base_models import CreateTodoRequest
+import schema
 
 # FastAPI app
 app: FastAPI = FastAPI()
@@ -76,7 +76,7 @@ async def get_todo_by_id(todo_id: str|int, session: SessionDep, user: Annotated[
     return {"todo": todo.to_dict()}
 
 @app.post("/api/todo/")
-async def create_todo(todo: CreateTodoRequest, session: SessionDep, user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
+async def create_todo(todo: schema.CreateTodoRequest, session: SessionDep, user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
     new_todo: Todo = Todo(
         title=todo.title,
         description=todo.description,
