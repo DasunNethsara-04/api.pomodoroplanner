@@ -5,7 +5,7 @@ This is the backend for the Pomodoro Planner app, designed to help students effe
 ## Features
 
 - **Pomodoro Timer**: Manage and track Pomodoro sessions.
-- **Todo List**: Create, update, and delete tasks.
+- **Todo List**: Create, update, and delete Todos.
 - **User Management**: Register and authenticate users.
 
 ## Setup
@@ -59,10 +59,11 @@ This is the backend for the Pomodoro Planner app, designed to help students effe
 - **API Info**: `GET /api/info`
 - **User Registration**: `POST /auth/`
 - **User Login**: `POST /api/token/`
-- **Create Task**: `POST /api/tasks/`
-- **Get Tasks**: `GET /api/tasks/`
-- **Update Task**: `PUT /api/tasks/{task_id}/` (_Not implemented yet_)
-- **Delete Task**: `DELETE /api/tasks/{task_id}/` (_Not implemented yet_)
+- **Create Todo**: `POST /api/todo/`
+- **Get Todos**: `GET /api/todos/`
+- **Get Todo by ID**: `GET /api/todo/{todo_id}`
+- **Update Todo**: `PUT /api/todo/{todo_id}/` (_Not implemented yet_)
+- **Delete Todo**: `DELETE /api/todo/{todo_id}/` (_Not implemented yet_)
 
 ## Contributing
 
