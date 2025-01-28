@@ -1,6 +1,6 @@
 # imports
 from typing import Annotated, Any, List
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from database import engine, SessionLocal
@@ -9,7 +9,8 @@ import models
 import auth
 from auth import get_current_user
 from models import User, Todo, Studies
-from base_models import CreateTodoRequest
+import schema
+from exceptions import Exceptions
 
 # FastAPI app
 app: FastAPI = FastAPI()
@@ -21,6 +22,9 @@ app.add_middleware(CORSMiddleware,
                     allow_methods=["*"],
                     allow_headers=["*"],
                    )
+
+# exceptions
+exception: Exceptions = Exceptions()
 
 @app.on_event("startup")
 async def on_startup() -> None:
@@ -54,13 +58,13 @@ async def info() -> dict[str, str]:
 @app.get("/api/user", status_code=status.HTTP_200_OK)
 async def get_user(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict[str, dict[str, str]]:
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+        exception.http_401_unauthorized_exception("Unauthorized User!")
     return {"User": user}
 
 @app.get("/api/users")
 async def get_users(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> list[str, User]:
     users: list[User] = session.query(User).all()
-    return {"User": user}
+    return {"User": users}
 
 # todos related endpoints
 @app.get("/api/todos")
@@ -72,11 +76,11 @@ async def get_todos(session: SessionDep, user: dict = Depends(get_current_user))
 async def get_todo_by_id(todo_id: str|int, session: SessionDep, user: Annotated[dict, Depends(get_current_user)]) -> dict[str, dict[str, Any]]:
     todo: Todo = session.query(Todo).filter(Todo.id == todo_id).first()
     if todo is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not Found!")
+        exception.http_404_not_found_exception("Todo Not Found!")
     return {"todo": todo.to_dict()}
 
 @app.post("/api/todo/")
-async def create_todo(todo: CreateTodoRequest, session: SessionDep, user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
+async def create_todo(todo: schema.CreateTodoRequest, session: SessionDep, user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
     new_todo: Todo = Todo(
         title=todo.title,
         description=todo.description,
