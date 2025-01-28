@@ -3,13 +3,13 @@ from typing import Annotated, Any, List
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
-from database import engine, SessionLocal
+from database import engine, SessionDep, get_db
 from sqlalchemy.orm import Session
 import models
 import auth
-from auth import get_current_user
 from models import User, Todo, Studies
 import schema
+from auth import get_current_user
 from exceptions import Exceptions
 
 # FastAPI app
@@ -29,14 +29,7 @@ exception: Exceptions = Exceptions()
 @app.on_event("startup")
 async def on_startup() -> None:
     models.Base.metadata.create_all(bind=engine)
-    
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        
+
 SessionDep = Annotated[Session, Depends(get_db)]
     
 @app.get("/api/")

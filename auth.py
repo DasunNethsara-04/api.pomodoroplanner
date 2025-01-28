@@ -1,13 +1,12 @@
 # imports
 from datetime import timedelta, datetime
-from typing import Annotated, Any, Generator
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from database import *
-from sqlalchemy.orm import Session
 from models import User
 import schema
 from exceptions import Exceptions
@@ -23,20 +22,6 @@ router: APIRouter = APIRouter(
     prefix="/auth",
     tags=["auth"]
 )
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        
-SessionDep = Annotated[Session, Depends(get_db)]
-
-def get_session() -> Generator[Session, Any, None]:
-    with Session(engine) as session:
-        yield session
-
 
 def authenticate_user(username: str, password: str, db: SessionDep) -> dict[User] | bool :
     user = db.query(User).filter(User.username == username).first()
