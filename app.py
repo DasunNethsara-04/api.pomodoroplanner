@@ -3,7 +3,7 @@ from typing import Annotated, Any, List
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
-from database import engine, SessionDep, get_db
+from database import engine, get_db
 from sqlalchemy.orm import Session
 import models
 import auth
@@ -30,7 +30,6 @@ exception: Exceptions = Exceptions()
 async def on_startup() -> None:
     models.Base.metadata.create_all(bind=engine)
 
-SessionDep = Annotated[Session, Depends(get_db)]
     
 @app.get("/api/")
 async def index() -> dict[str, str]:
@@ -49,31 +48,32 @@ async def info() -> dict[str, str]:
 
 # users related endpoints
 @app.get("/api/user", status_code=status.HTTP_200_OK)
-async def get_user(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict[str, dict[str, str]]:
+async def get_user(user: Annotated[dict, Depends(get_current_user)], session: Annotated[Session, Depends(get_db)]) -> dict[str, dict[str, str]]:
     if user is None:
         exception.http_401_unauthorized_exception("Unauthorized User!")
     return {"User": user}
 
 @app.get("/api/users")
-async def get_users(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> list[str, User]:
+async def get_users(user: Annotated[dict, Depends(get_current_user)], session: Annotated[Session, Depends(get_db)]) -> list[str, User]:
     users: list[User] = session.query(User).all()
     return {"User": users}
 
+
 # todos related endpoints
 @app.get("/api/todos")
-async def get_todos(session: SessionDep, user: dict = Depends(get_current_user)) -> dict[str, list[dict[str, Any]]]:
+async def get_todos(session: Annotated[Session, Depends(get_db)], user: dict = Depends(get_current_user)) -> dict[str, list[dict[str, Any]]]:
     todos: List[Todo] = session.query(Todo).filter(Todo.user_id == user["id"]).all()
     return {"todos": [todo.to_dict() for todo in todos]}
 
 @app.get("/api/todo/{todo_id}")
-async def get_todo_by_id(todo_id: str|int, session: SessionDep, user: Annotated[dict, Depends(get_current_user)]) -> dict[str, dict[str, Any]]:
+async def get_todo_by_id(todo_id: str|int, session: Annotated[Session, Depends(get_db)], user: Annotated[dict, Depends(get_current_user)]) -> dict[str, dict[str, Any]]:
     todo: Todo = session.query(Todo).filter(Todo.id == todo_id).first()
     if todo is None:
         exception.http_404_not_found_exception("Todo Not Found!")
     return {"todo": todo.to_dict()}
 
 @app.post("/api/todo/")
-async def create_todo(todo: schema.CreateTodoRequest, session: SessionDep, user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
+async def create_todo(todo: schema.CreateTodoRequest, session: Annotated[Session, Depends(get_db)], user: Annotated[dict, Depends(get_current_user)])-> dict[str, str|bool]:
     new_todo: Todo = Todo(
         title=todo.title,
         description=todo.description,
@@ -86,8 +86,25 @@ async def create_todo(todo: schema.CreateTodoRequest, session: SessionDep, user:
     session.commit()
     return {"success": True, "message": "New Todo Created Successfully!"}
 
+@app.put("/api/todo/{todo_id}")
+async def update_todo(todo_id: int|str, todo_req: schema.CreateTodoRequest, session: Annotated[Session, Depends(get_db)], user: Annotated[dict, Depends(get_current_user)]) -> dict[str, str|bool|dict[str, Any]]:
+    todo: Todo = session.query(Todo).filter(Todo.id == todo_id).first()
+    if todo is None:
+        exception.http_404_not_found_exception("Todo Not Found!")
+    if todo.user_id!= user["id"]:
+        exception.http_401_unauthorized_exception("Unauthorized User!")
+        
+    todo.title = todo_req.title
+    todo.description = todo_req.description
+    todo.completed = todo_req.completed
+    todo.dueDate = todo_req.dueDate
+    
+    session.commit()
+    session.refresh(todo)
+    return {"success": True, "message": "Todo Updated Successfully!", "todo": todo.to_dict()}
+
 # studies related endpoints
 @app.get("/api/studies")
-async def get_studies(user: Annotated[dict, Depends(get_current_user)], session: SessionDep) -> dict:
+async def get_studies(user: Annotated[dict, Depends(get_current_user)], session: Annotated[Session, Depends(get_db)]) -> dict:
     studies: list[Studies] = session.query(Studies).filter(Studies.user_id == user["id"]).all()
     return {"studies": studies}

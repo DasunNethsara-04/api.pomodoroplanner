@@ -40,6 +40,9 @@ This is the backend for the Pomodoro Planner app, designed to help students effe
 
 4. **Set up the MySQL database:**
    - Create a new MySQL database named `pomodoro_planner`.
+     ```sql
+     CREATE DATABASE pomodoro_planner;
+     ```
    - Update the `DATABASE_URL` in the `database.py` file with your database credentials.
 
 ## Running the Application
@@ -62,7 +65,7 @@ This is the backend for the Pomodoro Planner app, designed to help students effe
 - **Create Todo**: `POST /api/todo/`
 - **Get Todos**: `GET /api/todos/`
 - **Get Todo by ID**: `GET /api/todo/{todo_id}`
-- **Update Todo**: `PUT /api/todo/{todo_id}/` (_Not implemented yet_)
+- **Update Todo**: `PUT /api/todo/{todo_id}/`
 - **Delete Todo**: `DELETE /api/todo/{todo_id}/` (_Not implemented yet_)
 
 ## Contributing
