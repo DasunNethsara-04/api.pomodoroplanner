@@ -40,6 +40,9 @@ This is the backend for the Pomodoro Planner app, designed to help students effe
 
 4. **Set up the MySQL database:**
    - Create a new MySQL database named `pomodoro_planner`.
+     ```sql
+     CREATE DATABASE pomodoro_planner;
+     ```
    - Update the `DATABASE_URL` in the `database.py` file with your database credentials.
 
 ## Running the Application
