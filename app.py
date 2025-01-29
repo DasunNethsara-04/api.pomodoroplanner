@@ -86,6 +86,22 @@ async def create_todo(todo: schema.CreateTodoRequest, session: Annotated[Session
     session.commit()
     return {"success": True, "message": "New Todo Created Successfully!"}
 
+@app.put("/api/todo/{todo_id}")
+async def update_todo(todo_id: int|str, todo_req: schema.CreateTodoRequest, session: Annotated[Session, Depends(get_db)], user: Annotated[dict, Depends(get_current_user)]) -> dict[str, str|bool|dict[str, Any]]:
+    todo: Todo = session.query(Todo).filter(Todo.id == todo_id).first()
+    if todo is None:
+        exception.http_404_not_found_exception("Todo Not Found!")
+    if todo.user_id!= user["id"]:
+        exception.http_401_unauthorized_exception("Unauthorized User!")
+        
+    todo.title = todo_req.title
+    todo.description = todo_req.description
+    todo.completed = todo_req.completed
+    todo.dueDate = todo_req.dueDate
+    
+    session.commit()
+    session.refresh(todo)
+    return {"success": True, "message": "Todo Updated Successfully!", "todo": todo.to_dict()}
 
 # studies related endpoints
 @app.get("/api/studies")
