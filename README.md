@@ -66,7 +66,7 @@ This is the backend for the Pomodoro Planner app, designed to help students effe
 - **Get Todos**: `GET /api/todos/`
 - **Get Todo by ID**: `GET /api/todo/{todo_id}`
 - **Update Todo**: `PUT /api/todo/{todo_id}/`
-- **Delete Todo**: `DELETE /api/todo/{todo_id}/` (_Not implemented yet_)
+- **Delete Todo**: `DELETE /api/todo/{todo_id}/`
 
 ## Contributing
 
