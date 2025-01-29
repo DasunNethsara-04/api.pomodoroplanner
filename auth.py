@@ -10,6 +10,7 @@ from database import *
 from models import User
 import schema
 from exceptions import Exceptions
+from sqlalchemy.orm import Session
 
 SECRET_KEY: str = "KEY"
 ALGORITHM: str = "HS256"
@@ -23,7 +24,7 @@ router: APIRouter = APIRouter(
     tags=["auth"]
 )
 
-def authenticate_user(username: str, password: str, db: SessionDep) -> dict[User] | bool :
+def authenticate_user(username: str, password: str, db: Annotated[Session, Depends(get_db)]) -> dict[User] | bool :
     user = db.query(User).filter(User.username == username).first()
     if not user:
         return False
@@ -39,7 +40,7 @@ def create_access_token(username: str, id: int|str, expires_delta: timedelta) ->
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def create_user(session: SessionDep, create_user_request: schema.CreateUserRequest) -> User:
+def create_user(session: Annotated[Session, Depends(get_db)], create_user_request: schema.CreateUserRequest) -> User:
     create_user_model: User = User(
         firstName=create_user_request.firstName,
         lastName=create_user_request.lastName,
@@ -51,7 +52,7 @@ def create_user(session: SessionDep, create_user_request: schema.CreateUserReque
     return create_user_model
   
   
-def get_user_by_username(session: SessionDep, username: str) -> dict:
+def get_user_by_username(session: Annotated[Session, Depends(get_db)], username: str) -> dict:
     return session.query(User).filter(User.username == username).first()
 
 
@@ -79,7 +80,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]) -> dic
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def register_user(db: SessionDep, create_user_request: schema.CreateUserRequest) -> dict[str, str]:
+async def register_user(db: Annotated[Session, Depends(get_db)], create_user_request: schema.CreateUserRequest) -> dict[str, str]:
     db_user = get_user_by_username(db, create_user_request.username)
     if db_user:
         exception.http_400_bad_request_exception("Username already registered")
@@ -89,7 +90,7 @@ async def register_user(db: SessionDep, create_user_request: schema.CreateUserRe
     
 
 @router.post("/token", response_model=schema.Token)
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: SessionDep) -> dict[str, str]:
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Annotated[Session, Depends(get_db)]) -> dict[str, str]:
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         exception.http_401_unauthorized_exception("Could not validate credentials")
