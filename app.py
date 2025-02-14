@@ -11,6 +11,7 @@ from models import User, Todo, Studies
 import schema
 from auth import get_current_user
 from exceptions import Exceptions
+from controllers import TodoController, UserController, StudiesController
 
 # FastAPI app
 app: FastAPI = FastAPI()
@@ -23,8 +24,11 @@ app.add_middleware(CORSMiddleware,
                     allow_headers=["*"],
                    )
 
-# exceptions
+# required classes
 exception: Exceptions = Exceptions()
+todo_controller: TodoController = TodoController()
+user_controller: UserController = UserController()
+studies_controller: StudiesController = StudiesController()
 
 
 @app.on_event("startup")
@@ -53,7 +57,7 @@ async def info() -> dict[str, str]:
 @app.get("/api/user", status_code=status.HTTP_200_OK)
 async def get_user(user: Annotated[dict, Depends(get_current_user)],
                    session: Annotated[Session, Depends(get_db)]
-                   ) -> dict[str, dict[str, str]]:
+                   ) -> dict:
     if user is None:
         exception.http_401_unauthorized_exception("Unauthorized User!")
     return {"User": user}
@@ -62,9 +66,11 @@ async def get_user(user: Annotated[dict, Depends(get_current_user)],
 @app.get("/api/users")
 async def get_users(user: Annotated[dict, Depends(get_current_user)],
                     session: Annotated[Session, Depends(get_db)]
-                    ) -> list[str, User]:
-    users: list[User] = session.query(User).all()
-    return {"User": users}
+                    ) -> dict:
+    if user is None:
+        exception.http_401_unauthorized_exception("Unauthorized User!")
+    users: List[User] = user_controller.get_users(session)
+    return {"users": [user.to_dict() for user in users]}
 
 
 # todos related endpoints
