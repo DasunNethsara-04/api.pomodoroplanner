@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import Boolean, Column, Date, ForeignKey, Integer, String, DateTime
 from database import Base
 
+
 class User(Base):
     '''User model for the database. This model contains the user's information.'''
     __tablename__ = "user"
@@ -13,6 +14,16 @@ class User(Base):
     lastName = Column(String(30), index=True)
     username = Column(String(50), index=True)
     password = Column(String(75), index=True)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "firstName": self.firstName,
+            "lastName": self.lastName,
+            "username": self.username,
+            "password": self.password
+        }
+
     
 class Todo(Base):
     '''Todo model for the database. This model contains the todo information.'''
