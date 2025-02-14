@@ -57,3 +57,11 @@ class Studies(Base):
     user_id = Column(Integer, ForeignKey("user.id"))
     date = Column(DateTime, index=True, default=datetime.datetime.utcnow)
     hours = Column(Integer, index=True, default=0)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "date": self.date,
+            "hours": self.hours
+        }
