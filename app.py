@@ -64,9 +64,7 @@ async def get_user(user: Annotated[dict, Depends(get_current_user)],
 
 
 @app.get("/api/users")
-async def get_users(user: Annotated[dict, Depends(get_current_user)],
-                    session: Annotated[Session, Depends(get_db)]
-                    ) -> dict:
+async def get_users(user: Annotated[dict, Depends(get_current_user)], session: Annotated[Session, Depends(get_db)]) -> dict:
     if user is None:
         exception.http_401_unauthorized_exception("Unauthorized User!")
     users: List[User] = user_controller.get_users(session)
@@ -75,16 +73,14 @@ async def get_users(user: Annotated[dict, Depends(get_current_user)],
 
 # todos related endpoints
 @app.get("/api/todos")
-async def get_todos(session: Annotated[Session, Depends(get_db)],
-                    user: dict=Depends(get_current_user)
-                    ) -> dict[str, list[dict[str, Any]]]:
-    todos: List[Todo] = session.query(Todo).filter(Todo.user_id == user["id"]).all()
+async def get_todos(session: Annotated[Session, Depends(get_db)], user: dict=Depends(get_current_user)) -> dict[str, list[dict[str, Any]]]:
+    todos: List[Todo] = todo_controller.get_todos(session, user["id"])
     return {"todos": [todo.to_dict() for todo in todos]}
 
 
 @app.get("/api/todo/{todo_id}")
 async def get_todo_by_id(todo_id: str | int, session: Annotated[Session, Depends(get_db)], user: Annotated[dict, Depends(get_current_user)]) -> dict[str, dict[str, Any]]:
-    todo: Todo = session.query(Todo).filter(Todo.id == todo_id).first()
+    todo: Todo = todo_controller.get_todo_by_id(session, todo_id)
     if todo is None:
         exception.http_404_not_found_exception("Todo Not Found!")
     return {"todo": todo.to_dict()}
@@ -92,44 +88,23 @@ async def get_todo_by_id(todo_id: str | int, session: Annotated[Session, Depends
 
 @app.post("/api/todo/")
 async def create_todo(todo: schema.CreateTodoRequest, session: Annotated[Session, Depends(get_db)], user: Annotated[dict, Depends(get_current_user)]) -> dict[str, str | bool]:
-    new_todo: Todo = Todo(
-        title=todo.title,
-        description=todo.description,
-        completed=todo.completed,
-        dueDate=todo.dueDate,
-        created_at=todo.created_at,
-        user_id=user["id"]
-    )
-    session.add(new_todo)
-    session.commit()
+    if todo_controller.create_todo(session, todo, user["id"]) is None:
+        exception.http_500_internal_server_error_exception("Failed to create new Todo!")
     return {"success": True, "message": "New Todo Created Successfully!"}
 
 
 @app.put("/api/todo/{todo_id}")
 async def update_todo(todo_id: int | str, todo_req: schema.CreateTodoRequest, session: Annotated[Session, Depends(get_db)], user: Annotated[dict, Depends(get_current_user)]) -> dict[str, str | bool | dict[str, Any]]:
-    todo: Todo = session.query(Todo).filter(Todo.id == todo_id).first()
-    if todo is None:
-        exception.http_404_not_found_exception("Todo Not Found!")
-    if todo.user_id != user["id"]:
-        exception.http_401_unauthorized_exception("Unauthorized User!")
-        
-    todo.title = todo_req.title
-    todo.description = todo_req.description
-    todo.completed = todo_req.completed
-    todo.dueDate = todo_req.dueDate
-    
-    session.commit()
-    session.refresh(todo)
-    return {"success": True, "message": "Todo Updated Successfully!", "todo": todo.to_dict()}
+    updated_todo: Todo = todo_controller.update_todo(session, todo_id, todo_req, user["id"])
+    if updated_todo is None:
+        exception.http_500_internal_server_error_exception("Failed to update Todo!")
+    return {"success": True, "message": "Todo Updated Successfully!", "todo": updated_todo.to_dict()}
 
 
 @app.delete("/api/todo/{todo_id}")
 async def delete_todo(todo_id: int | str, session: Annotated[Session, Depends(get_db)], user: Annotated[dict, Depends(get_current_user)]) -> dict[str, str | bool]:
-    todo: Todo = session.query(Todo).filter(Todo.id == todo_id).first()
-    if todo is None:
-        exception.http_404_not_found_exception("Todo not found!")
-    session.delete(todo)
-    session.commit()
+    if not todo_controller.delete_todo(session, todo_id):
+        exception.http_500_internal_server_error_exception("Failed to delete a Todo!")
     return {"success":True, "message":"Todo deleted successfully!"}
 
 
